@@ -418,15 +418,24 @@ async fn create_userget() -> HttpResponse {
     HttpResponse::Ok().body("fuck you")
 }
 
+#[get("/submit2")]
+async fn create_userget2() -> HttpResponse {
+    HttpResponse::Ok().body("fuck you2")
+}
+
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     println!("Сервер запущен на http://localhost:8080");
 
     HttpServer::new(|| {
         App::new()
-            .service(Files::new("/", "./static").index_file("index.html"))
-            .service(create_user)
+          //  .service(Files::new("/", "./static").index_file("index.html"))
+          //  .service(create_user)
             .service(create_userget)
+            .service(create_userget2)
+            .service(create_user)
+
     })
     .bind("127.0.0.1:8080")?
     .run()
