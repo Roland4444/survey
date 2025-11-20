@@ -400,7 +400,7 @@
 
 
 
-use actix_web::{post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{post, web, get, App, HttpResponse, HttpServer, Responder};
 use actix_files::Files;
 use serde::Deserialize;
 use std::fs::OpenOptions;
@@ -412,6 +412,12 @@ async fn create_user() -> HttpResponse {
     HttpResponse::Ok().body("fuck you")
 }
 
+
+#[get("/submit")]
+async fn create_userget() -> HttpResponse {
+    HttpResponse::Ok().body("fuck you")
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     println!("Сервер запущен на http://localhost:8080");
@@ -420,6 +426,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .service(Files::new("/", "./static").index_file("index.html"))
             .service(create_user)
+            .service(create_userget)
     })
     .bind("127.0.0.1:8080")?
     .run()
