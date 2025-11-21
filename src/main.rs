@@ -400,16 +400,56 @@
 
 
 
-use actix_web::{post, web, get, App, HttpResponse, HttpServer, Responder};
+use actix_web::{post, web, get, App, HttpResponse, HttpServer, Responder, HttpRequest};
 use actix_files::Files;
 use serde::Deserialize;
 use std::fs::OpenOptions;
 use std::io::Write;
 use chrono::Utc;
 
+#[derive(Deserialize)]
+struct FormData{
+    name: Option<String>
+}
+
+
+
+#[post("/debug")]
+async fn debug_request(req: HttpRequest, payload: web::Payload) -> HttpResponse {
+    println!("=== REQUEST INFO ===");
+    println!("Method: {}", req.method());
+    println!("URI: {}", req.uri());
+    println!("Headers:");
+    for (name, value) in req.headers() {
+        println!("  {}: {:?}", name, value);
+    }
+    
+    // Извлекаем тело
+    let body = payload.to_bytes().await.unwrap();
+    let body_str = String::from_utf8_lossy(&body);
+    println!("Body: {}", body_str);
+    println!("===================");
+
+    HttpResponse::Ok().body("Запрос залогирован")
+}
+
+
 #[post("/submit")]
+async fn submit_form(form: web::Form<FormData>) -> HttpResponse {
+    // let timestamp  = Utc :: now(). format("%Y-%m-%d %H:%M:%S");
+    // HttpResponse::InternalServerError().body("Ошибка при сохранении данных")
+    let name = form.name.clone().unwrap_or_else(|| "не указано".to_string());
+    println!("{}", name.to_string());
+
+    HttpResponse::Ok()
+                .content_type("text/html; charset=utf-8")
+                .body(name)
+
+    
+}
+#[post("/submit3")]
 async fn create_user() -> HttpResponse {
-    HttpResponse::Ok().body("fuck you")
+    HttpResponse::Ok().body("fuck you2")
 }
 
 
@@ -427,14 +467,17 @@ async fn create_userget2() -> HttpResponse {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     println!("Сервер запущен на http://localhost:8080");
-
     HttpServer::new(|| {
         App::new()
           //  .service(Files::new("/", "./static").index_file("index.html"))
           //  .service(create_user)
+
+        /////    .service(Files::new("/","./static").index_file("index.html"))
+            .service(debug_request)
             .service(create_userget)
             .service(create_userget2)
             .service(create_user)
+            .service(Files::new("/","./static").index_file("index.html"))
 
     })
     .bind("127.0.0.1:8080")?
