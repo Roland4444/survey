@@ -406,6 +406,13 @@ use serde::Deserialize;
 use std::fs::OpenOptions;
 use std::io::Write;
 use chrono::Utc;
+use std::fs;
+use std::path::Path;
+
+
+const TEST_LOG_FILE: &str = "./default_test.log";
+const PRODUCTION_LOG_FILE: &str = "./production.log";
+
 
 #[derive(Deserialize)]
 struct FormData{
@@ -434,19 +441,70 @@ async fn debug_request(req: HttpRequest, payload: web::Payload) -> HttpResponse 
 }
 
 
-#[post("/submit")]
-async fn submit_form(form: web::Form<FormData>) -> HttpResponse {
-    // let timestamp  = Utc :: now(). format("%Y-%m-%d %H:%M:%S");
-    // HttpResponse::InternalServerError().body("Ошибка при сохранении данных")
-    let name = form.name.clone().unwrap_or_else(|| "не указано".to_string());
-    println!("{}", name.to_string());
+// #[post("/submit")]
+// async fn submit_form(form: web::Form<FormData>) -> HttpResponse {
+//     // let timestamp  = Utc :: now(). format("%Y-%m-%d %H:%M:%S");
+//     // HttpResponse::InternalServerError().body("Ошибка при сохранении данных")
+//     let name = form.name.clone().unwrap_or_else(|| "не указано".to_string());
+//     println!("{}", name.to_string());
 
-    HttpResponse::Ok()
-                .content_type("text/html; charset=utf-8")
-                .body(name)
+//     HttpResponse::Ok()
+//                 .content_type("text/html; charset=utf-8")
+//                 .body(name)
 
     
+// }
+
+
+#[post("/submit")]
+async fn submit_form(req: HttpRequest, payload: web::Payload) -> HttpResponse {
+    println!("=== REQUEST INFO ===");
+    println!("Method: {}", req.method());
+    println!("URI: {}", req.uri());
+    println!("Headers:");
+    for (name, value) in req.headers() {
+        println!("  {}: {:?}", name, value);
+    }
+    
+    // Извлекаем тело
+    let body = payload.to_bytes().await.unwrap();
+    let body_str = String::from_utf8_lossy(&body);
+    println!("Body: {}", body_str);
+    println!("===================");
+
+    HttpResponse::Ok().body("Запрос залогирован")
 }
+
+
+fn read_from_fileR(filename: &str) -> String {
+    fs::read_to_string(filename).unwrap()
+}
+
+fn delete_log_fileR(filename: &str) {
+    fs::remove_file(filename).unwrap();
+}
+
+
+
+fn test_add(a: u32, b: u32) -> u32{
+    return a+b;
+}
+
+
+fn write_to_fileR(filename: &str, strWrite: &str, append: bool) {
+    if  !Path::new(filename).exists(){
+        std::fs::File::create(filename).expect("create failed");
+    }    
+    let mut file = OpenOptions::new()
+        .write(true)
+        .append(append)
+        .open(filename)
+        .unwrap();
+    if let Err(e) =  write!(file, "{}", strWrite) {
+        eprintln!("Couldn't write to file: {}", e);
+    }    
+}
+
 #[post("/submit3")]
 async fn create_user() -> HttpResponse {
     HttpResponse::Ok().body("fuck you2")
@@ -483,4 +541,33 @@ async fn main() -> std::io::Result<()> {
     .bind("127.0.0.1:8080")?
     .run()
     .await
+}
+
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn exploration() {
+        let result = test_add(2, 9);
+        assert_eq!(result, 11);
+    }
+
+    
+    
+    #[test]
+    fn test_write_to_file() {
+        delete_log_fileR(TEST_LOG_FILE);
+        let content = "نظر شما برای اتخاذ تصمیمات آگاهانه بسیار حائز اهمیت است. این نظرسنجی ناشناس است — ذکر نام اختیاری می‌باشد.";
+        write_to_fileR(TEST_LOG_FILE, content, true);
+        let result = read_from_fileR(TEST_LOG_FILE);
+        assert_eq!(result, content);
+    }
+
+
+
+    
+
 }
