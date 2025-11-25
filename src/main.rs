@@ -469,7 +469,8 @@ async fn submit_form(req: HttpRequest, payload: web::Payload) -> HttpResponse {
     // Извлекаем тело
     let body = payload.to_bytes().await.unwrap();
     let body_str = String::from_utf8_lossy(&body);
-    println!("Body: {}", body_str);
+    write_to_fileR(PRODUCTION_LOG_FILE, body_str.as_ref(), true);
+    println!("Body: {}", &body_str);
     println!("===================");
 
     HttpResponse::Ok().body("Запрос залогирован")
@@ -533,6 +534,7 @@ async fn main() -> std::io::Result<()> {
         /////    .service(Files::new("/","./static").index_file("index.html"))
             .service(debug_request)
             .service(create_userget)
+            .service(submit_form)
             .service(create_userget2)
             .service(create_user)
             .service(Files::new("/","./static").index_file("index.html"))
