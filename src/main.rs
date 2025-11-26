@@ -414,6 +414,7 @@ use urlencoding::decode;
 const TEST_LOG_FILE: &str = "./default_test.log";
 const PRODUCTION_LOG_FILE: &str = "./production.log";
 const PRODUCTION_LOG_FILE_DIRECT: &str = "./productionF.log";
+const allow_multiple_sutvey = true;
 
 
 
