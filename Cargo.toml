@@ -11,6 +11,7 @@ actix-web="4.4"
 serde = {version = "1.0", fautures = ["derive"] }
 chrono = {version = "0.4", feautures = ["serde"]}
 env_logger = "0.10"
+urlencoding = "2.1"
 log = "0.4"
 
 

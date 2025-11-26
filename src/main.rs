@@ -408,10 +408,13 @@ use std::io::Write;
 use chrono::Utc;
 use std::fs;
 use std::path::Path;
+use urlencoding::decode;
 
 
 const TEST_LOG_FILE: &str = "./default_test.log";
 const PRODUCTION_LOG_FILE: &str = "./production.log";
+const PRODUCTION_LOG_FILE_DIRECT: &str = "./productionF.log";
+
 
 
 #[derive(Deserialize)]
@@ -419,7 +422,22 @@ struct FormData{
     name: Option<String>
 }
 
-
+fn decode_form_data(body: &str) -> String {
+    let mut result = String::new();
+    
+    // Разбираем пары ключ=значение
+    for pair in body.split('&') {
+        let parts: Vec<&str> = pair.split('=').collect();
+        if parts.len() == 2 {
+            let key = decode(parts[0]).unwrap_or_else(|_| parts[0].into());
+            let value = decode(parts[1]).unwrap_or_else(|_| parts[1].into());
+            
+            result.push_str(&format!("{}: {}\n", key, value));
+        }
+    }
+    
+    result
+}
 
 #[post("/debug")]
 async fn debug_request(req: HttpRequest, payload: web::Payload) -> HttpResponse {
@@ -469,9 +487,16 @@ async fn submit_form(req: HttpRequest, payload: web::Payload) -> HttpResponse {
     // Извлекаем тело
     let body = payload.to_bytes().await.unwrap();
     let body_str = String::from_utf8_lossy(&body);
+    let decoded_body = decode_form_data(&body_str).replace("+", " ");
+
     write_to_fileR(PRODUCTION_LOG_FILE, body_str.as_ref(), true);
     println!("Body: {}", &body_str);
     println!("===================");
+
+    println!("DECODED: {}", &decoded_body);
+    println!("===================");
+    write_to_fileR(PRODUCTION_LOG_FILE_DIRECT, decoded_body.as_ref(), true);
+
 
     HttpResponse::Ok().body("Запрос залогирован")
 }
