@@ -3,6 +3,9 @@ var HIDE = "none";
 var DESC_INPUT = "specialDesc";
 var DESC_FLAG = "specialFlag";
 //  const map = new Map<boolean, string>([[true, SHOW], [false, HIDE]]);
+
+
+//// https://docs.rs/actix-web/latest/actix_web/cookie/struct.Cookie.html      COOKIE
 function handleInputChange(value) {
     var element = document.getElementById(DESC_FLAG);
     var isChecked = element.checked;
